@@ -49,3 +49,44 @@ def query_workshop_ids_by_name(api_key: str, appid: str, names: List[str]) -> Li
             results.append(picked)
     return results
 
+
+def query_workshop_ids_by_name_without_key(appid: str, names: List[str]) -> List[str]:
+    """
+    Best-effort Fallback ohne API-Key: durchsucht die Workshop-Webseite und
+    extrahiert die erste gefundene PublishedFileID je Name.
+    """
+    results: List[str] = []
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+
+    def fetch(url: str) -> str:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.read().decode("utf-8", errors="ignore")
+
+    id_patterns = [
+        re.compile(r"data-publishedfileid=\"(\d+)\""),
+        re.compile(r"/filedetails/\?id=(\d+)")
+    ]
+
+    for name in names:
+        q = urllib.parse.quote_plus(name)
+        url = (
+            f"https://steamcommunity.com/workshop/browse/?appid={appid}"
+            f"&searchtext={q}&browsesort=textsearch&section=readytouseitems&numperpage=10"
+        )
+        try:
+            html = fetch(url)
+            picked: Optional[str] = None
+            for pat in id_patterns:
+                m = pat.search(html)
+                if m:
+                    picked = m.group(1)
+                    break
+            if picked:
+                results.append(picked)
+        except Exception:
+            # ignore and continue; this is best-effort
+            pass
+    return results

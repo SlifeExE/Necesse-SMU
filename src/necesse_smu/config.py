@@ -43,7 +43,10 @@ class Config:
 
 def find_config_path() -> str:
     # Prefer config in the directory of the executable/script
-    base_dir = os.path.dirname(os.path.abspath(getattr(sys.modules.get("__main__"), "__file__", os.getcwd())))
+    if getattr(sys, 'frozen', False):
+        base_dir = os.path.dirname(sys.executable)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(getattr(sys.modules.get("__main__"), "__file__", os.getcwd())))
     candidate = os.path.join(base_dir, DEFAULT_CONFIG_FILENAME)
     if os.path.isfile(candidate):
         return candidate

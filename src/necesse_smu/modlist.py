@@ -1,16 +1,26 @@
 import os
+import re
 from typing import List, Tuple
 
 from .steam_api import extract_numeric_ids
 
 
+NAME_RE = re.compile(r"^\s*name\s*=\s*(?P<val>.+?)(?:,\s*)?$", re.IGNORECASE)
+
+
+def _strip_quotes(s: str) -> str:
+    s = s.strip()
+    if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+        return s[1:-1].strip()
+    return s
+
+
 def read_modlist(mods_dir: str) -> Tuple[List[str], List[str]]:
     """
-    Reads `modlist.data` from the given mods directory and returns a tuple:
-    (ids, names_or_tokens)
+    Reads `modlist.data` and returns (ids, names).
 
-    - ids: list of numeric IDs found directly in the file
-    - names_or_tokens: leftover tokens (likely names) to be resolved via API or overrides
+    - ids: numeric Workshop IDs found directly in the file
+    - names: values found after 'name = ...' (one per mod block)
     """
     path = os.path.join(mods_dir, "modlist.data")
     if not os.path.isfile(path):
@@ -24,16 +34,18 @@ def read_modlist(mods_dir: str) -> Tuple[List[str], List[str]]:
             line = raw.strip()
             if not line or line.startswith("#") or line.startswith("//"):
                 continue
-            # Split on common separators
-            tokens = [t.strip() for t in [line] if t]
-            numeric = extract_numeric_ids(tokens)
-            if numeric:
-                ids.extend(numeric)
-            else:
-                names.extend(tokens)
+
+            # Collect any numeric IDs present in the line (rare)
+            ids.extend(extract_numeric_ids([line]))
+
+            # Extract human-readable mod name after 'name ='
+            m = NAME_RE.match(line)
+            if m:
+                val = _strip_quotes(m.group("val")).strip()
+                if val:
+                    names.append(val)
 
     # Dedupe while keeping order
     ids = list(dict.fromkeys(ids))
     names = list(dict.fromkeys(names))
     return ids, names
-

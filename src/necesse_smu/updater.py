@@ -4,7 +4,7 @@ from typing import Iterable, List, Tuple
 
 from .config import Config
 from .modlist import read_modlist
-from .steam_api import query_workshop_ids_by_name
+from .steam_api import query_workshop_ids_by_name, query_workshop_ids_by_name_without_key
 from .steamcmd import build_steamcmd_command, run_steamcmd
 
 
@@ -23,13 +23,21 @@ def resolve_mod_ids(cfg: Config) -> Tuple[List[str], List[str]]:
         ids.extend(mapped)
         names = remaining
 
-    # Optionally query Steam Web API for names
-    if names and cfg.steam_web_api_key:
+    # Resolve via API or fallback HTML search
+    if names:
+        if cfg.steam_web_api_key:
+            try:
+                found = query_workshop_ids_by_name(cfg.steam_web_api_key, cfg.steam_app_id, names)
+                ids.extend(found)
+            except Exception as e:
+                print(f"Warnung: Steam API Abfrage fehlgeschlagen: {e}")
+        # Fallback ohne API-Key (oder falls API nichts liefert)
         try:
-            found = query_workshop_ids_by_name(cfg.steam_web_api_key, cfg.steam_app_id, names)
-            ids.extend(found)
+            unresolved = [n for n in names]
+            found_html = query_workshop_ids_by_name_without_key(cfg.steam_app_id, unresolved)
+            ids.extend(found_html)
         except Exception as e:
-            print(f"Warnung: Steam API Abfrage fehlgeschlagen: {e}")
+            print(f"Warnung: Fallback-Suche ohne API fehlgeschlagen: {e}")
 
     # Dedupe while keeping order
     ids = list(dict.fromkeys([str(i) for i in ids]))
@@ -101,6 +109,14 @@ def run_update(cfg: Config) -> int:
         for n in unresolved:
             print(f"  - {n}")
         print("Hinweis: Fügen Sie 'mod_id_overrides' in der config hinzu oder setzen Sie 'steam_web_api_key' für automatische Suche.")
+        try:
+            # Print a small JSON skeleton to help filling overrides quickly
+            import json
+            skeleton = {name: "<WORKSHOP_ID>" for name in unresolved}
+            print("Vorschlag für config.json -> mod_id_overrides:")
+            print(json.dumps(skeleton, ensure_ascii=False, indent=2))
+        except Exception:
+            pass
 
     if not ids:
         print("Keine Mod-IDs ermittelt. Abbruch.")
@@ -121,4 +137,3 @@ def run_update(cfg: Config) -> int:
     copied = copy_jars_to_mods(cfg.mods_dir, jars)
     print(f"Kopiert: {len(copied)} JARs")
     return 0
-
