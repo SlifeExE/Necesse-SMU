@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="assets/icon.png" width="128" alt="Necesse Server & Mod Updater Icon">
+  <img src="https://raw.githubusercontent.com/SlifeExE/Necesse-SAMU/main/icon.png" width="128" alt="Necesse Server & Mod Updater Icon">
 </p>
+
 
 # Necesse Server and Mod Updater (SAMU)
 
