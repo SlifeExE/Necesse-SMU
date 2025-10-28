@@ -36,6 +36,8 @@ Passe die Datei `config.json` an:
 - `mods_dir`: Pfad zum Necesse `mods` Ordner (dort liegt `modlist.data`).
 - `steamcmd_path`: Pfad zur `steamcmd.exe`.
 - `steam_app_id`: AppID (Necesse = `1169040`).
+- `server_install_dir`: Installationsort deines Necesse Servers (z. B. `C:\\Necesse`).
+- `server_app_id`: AppID für den Server (Necesse Dedicated = `1169370`).
 - `download_dir`: Temporäres Download-Verzeichnis für SteamCMD.
 - `temp_ids_file`: Datei, in die die ermittelten Mod-IDs geschrieben werden.
 - `workshop_content_dir`: Optional; Standard ist `<SteamCMD>\steamapps\workshop\content\1169040`.
@@ -79,6 +81,16 @@ build.bat   (oder)   ./build.ps1
 - Führt einen SteamCMD-Aufruf mit mehreren `+workshop_download_item` aus.
 - Sucht `.jar` Dateien in den Workshop-Downloads und kopiert sie in den Mods-Ordner.
 - Löscht vorher alle `.jar` im Zielordner (nicht `modlist.data`).
+
+### Optional: Server-Update
+- Nach erfolgreichem Mod-Update fragt das Tool in farbiger Ausgabe: „Necesse Server jetzt updaten? [J/N]“
+- Bei Bestätigung wird folgender SteamCMD Befehl ausgeführt:
+
+```
+steamcmd.exe +force_install_dir "C:\\Necesse" +login anonymous +app_update 1169370 validate +quit
+```
+
+- Voraussetzung: `server_install_dir` (und optional `server_app_id`) in `config.json` gesetzt.
 
 ## Beispiel SteamCMD Befehl (intern generiert)
 

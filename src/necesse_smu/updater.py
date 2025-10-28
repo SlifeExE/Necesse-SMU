@@ -5,7 +5,7 @@ from typing import Iterable, List, Tuple
 from .config import Config
 from .modlist import read_modlist
 from .steam_api import query_workshop_ids_by_name, query_workshop_ids_by_name_without_key
-from .steamcmd import build_steamcmd_command, run_steamcmd
+from .steamcmd import build_steamcmd_command, run_steamcmd, build_app_update_command
 
 
 def resolve_mod_ids(cfg: Config) -> Tuple[List[str], List[str]]:
@@ -136,4 +136,43 @@ def run_update(cfg: Config) -> int:
     clear_old_jars(cfg.mods_dir)
     copied = copy_jars_to_mods(cfg.mods_dir, jars)
     print(f"Kopiert: {len(copied)} JARs")
+
+    # Optional: Server-Update abfragen
+    ask_and_update_server(cfg)
     return 0
+
+
+def ask_and_update_server(cfg: Config) -> None:
+    try:
+        import colorama
+        from colorama import Fore, Style
+        colorama.init(autoreset=True)
+    except Exception:
+        class Dummy:
+            RESET_ALL = ""
+        class ForeDummy:
+            CYAN = GREEN = YELLOW = RED = ""
+        class StyleDummy:
+            BRIGHT = NORMAL = ""
+        Fore = ForeDummy()
+        Style = StyleDummy()
+
+    if not cfg.server_install_dir:
+        print("Hinweis: 'server_install_dir' ist nicht gesetzt. Server-Update wird übersprungen.")
+        return
+
+    print("")
+    print(Fore.CYAN + Style.BRIGHT + "Necesse Server jetzt updaten? [J/N]")
+    ans = input(Fore.YELLOW + "> ").strip().lower()
+    if ans not in ("j", "y", "ja", "yes"):
+        print("Server-Update übersprungen.")
+        return
+
+    cmd = build_app_update_command(cfg.steamcmd_path, cfg.server_install_dir, cfg.server_app_id)
+    print(Fore.GREEN + "Starte Server-Update via SteamCMD:")
+    print(" ".join(cmd))
+    code = run_steamcmd(cmd)
+    if code == 0:
+        print(Fore.GREEN + "Server-Update erfolgreich abgeschlossen.")
+    else:
+        print(Fore.RED + f"Server-Update fehlgeschlagen (Exit {code}).")

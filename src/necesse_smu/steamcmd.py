@@ -35,3 +35,12 @@ def run_steamcmd(cmd: List[str]) -> int:
         for line in proc.stdout:
             print(line.rstrip())
     return proc.wait()
+
+
+def build_app_update_command(steamcmd_path: str, force_install_dir: str, app_id: str) -> List[str]:
+    parts: List[str] = []
+    parts += ["+force_install_dir", force_install_dir]
+    parts += ["+login", "anonymous"]
+    parts += ["+app_update", app_id, "validate"]
+    parts += ["+quit"]
+    return [steamcmd_path] + parts
