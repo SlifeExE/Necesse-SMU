@@ -10,19 +10,24 @@ py -m pip install -r requirements.txt
 
 REM Resolve icon
 set ICON_ARG=
-if exist icon.ico (
-  set ICON_ARG=--icon icon.ico
+REM Prefer PNG and always regenerate ICO if PNG exists
+if exist icon.png (
+  echo Converting icon.png to icon.ico ...
+  py -m pip install --quiet Pillow >nul
+  py tools\png_to_ico.py icon.png icon.ico
+  if exist icon.ico set ICON_ARG=--icon icon.ico
 ) else (
-  if exist icon.png (
-    echo Converting icon.png to icon.ico ...
-    py -m pip install --quiet Pillow >nul
-    py tools\png_to_ico.py icon.png icon.ico
-    if exist icon.ico set ICON_ARG=--icon icon.ico
+  if exist icon.ico (
+    set ICON_ARG=--icon icon.ico
   )
 )
 
+REM Remove old spec to avoid stale icon/config
+if exist %NAME%.spec del /q %NAME%.spec
+if exist build rmdir /s /q build
+
 echo Building executable...
-py -m PyInstaller -F -n %NAME% -p src %ICON_ARG% src\samu_entry.py
+py -m PyInstaller --clean --noconfirm -F -n %NAME% -p src %ICON_ARG% src\samu_entry.py
 
 if exist config.json (
   copy /Y config.json dist\config.json >nul
