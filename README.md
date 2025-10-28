@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" width="128" alt="Necesse Server & Mod Updater Icon">
+</p>
+
 # Necesse Server and Mod Updater (SAMU)
 
 Small tool to keep Necesse server mods up to date using SteamCMD.
