@@ -13,6 +13,8 @@ class Config:
     mods_dir: str
     steamcmd_path: str
     steam_app_id: str = "1169040"
+    server_install_dir: Optional[str] = None
+    server_app_id: str = "1169370"
     download_dir: Optional[str] = None
     temp_ids_file: Optional[str] = None
     workshop_content_dir: Optional[str] = None
@@ -70,6 +72,8 @@ def load_config(path: Optional[str] = None) -> Config:
         mods_dir=mods_dir,
         steamcmd_path=steamcmd_path,
         steam_app_id=str(data.get("steam_app_id", "1169040")),
+        server_install_dir=os.path.expandvars(os.path.expanduser(data.get("server_install_dir"))) if data.get("server_install_dir") else None,
+        server_app_id=str(data.get("server_app_id", "1169370")),
         download_dir=os.path.expandvars(os.path.expanduser(data.get("download_dir"))) if data.get("download_dir") else None,
         temp_ids_file=os.path.expandvars(os.path.expanduser(data.get("temp_ids_file"))) if data.get("temp_ids_file") else None,
         workshop_content_dir=os.path.expandvars(os.path.expanduser(data.get("workshop_content_dir"))) if data.get("workshop_content_dir") else None,
