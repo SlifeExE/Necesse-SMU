@@ -1,107 +1,92 @@
 # Necesse Server Mod Updater (SMU)
 
-Kleines Tool zum Aktualisieren der Mods eines Necesse Servers mit SteamCMD.
+Small tool to keep Necesse server mods up to date using SteamCMD.
 
-Es liest `modlist.data` aus dem Necesse Mods-Ordner, ermittelt die Steam Workshop IDs (direkt aus der Datei, per Overrides oder optional via Steam Web API) und lädt die Mods mit SteamCMD herunter. Danach werden die `.jar` Dateien in den Server-Mods-Ordner kopiert. Vorher vorhandene `.jar` im Zielordner werden gelöscht (nur `modlist.data` bleibt erhalten).
+It reads `modlist.data` from your Necesse mods folder, resolves Steam Workshop IDs (directly from the file, via overrides, or optional Steam Web API), downloads mods via SteamCMD, and copies the resulting `.jar` files into the server mods folder. Existing `.jar` files in the target folder are removed first (only `modlist.data` stays).
 
-## Voraussetzungen
-- Windows mit SteamCMD installiert (z. B. `C:\SteamCMD\steamcmd.exe`).
-- Necesse Mods-Ordner (z. B. `C:\Users\Administrator\AppData\Roaming\Necesse\mods`).
-- Optional: Steam Web API Key, falls Mod-Namen auf Workshop-IDs aufgelöst werden sollen.
-
-## Schnellstart (Releases)
-- Lade unter GitHub Releases die aktuelle `NecesseSMU.exe` herunter.
-- Lege eine `config.json` in den gleichen Ordner wie die `NecesseSMU.exe` mit dieser Struktur an:
+## Quick Start (Releases)
+- Download the latest `NecesseSMU.exe` from GitHub Releases.
+- Put a `config.json` next to the EXE with this structure:
 
 ```
 {
   "mods_dir": "C:\\Users\\Administrator\\AppData\\Roaming\\Necesse\\mods",
   "steamcmd_path": "C:\\SteamCMD\\steamcmd.exe",
   "steam_app_id": "1169040",
+  "server_install_dir": "C:\\Necesse",
+  "server_app_id": "1169370",
   "download_dir": "C:\\SteamCMD\\downloads",
   "temp_ids_file": "C:\\SteamCMD\\mod_ids.txt",
   "workshop_content_dir": "",
   "steam_web_api_key": "",
   "mod_id_overrides": {
-    "BeispielModName": "2827931647"
+    "ExampleModName": "2827931647"
   }
 }
 ```
 
-- Doppelklick auf `NecesseSMU.exe` (optional mit `--config <Pfad>`).
+- Double‑click `NecesseSMU.exe` (or run with `--config <path>`).
 
-## Konfiguration
-Passe die Datei `config.json` an:
+## Requirements
+- Windows with SteamCMD installed (e.g., `C:\SteamCMD\steamcmd.exe`).
+- Necesse mods folder (e.g., `C:\Users\Administrator\AppData\Roaming\Necesse\mods`).
+- Optional: Steam Web API key for name→ID lookups.
 
-- `mods_dir`: Pfad zum Necesse `mods` Ordner (dort liegt `modlist.data`).
-- `steamcmd_path`: Pfad zur `steamcmd.exe`.
-- `steam_app_id`: AppID (Necesse = `1169040`).
-- `server_install_dir`: Installationsort deines Necesse Servers (z. B. `C:\\Necesse`).
-- `server_app_id`: AppID für den Server (Necesse Dedicated = `1169370`).
-- `download_dir`: Temporäres Download-Verzeichnis für SteamCMD.
-- `temp_ids_file`: Datei, in die die ermittelten Mod-IDs geschrieben werden.
-- `workshop_content_dir`: Optional; Standard ist `<SteamCMD>\steamapps\workshop\content\1169040`.
-- `steam_web_api_key`: Optional; für Namenssuche im Workshop.
-- `mod_id_overrides`: Mapping von Mod-Namen -> Workshop-ID (fallback, wenn keine IDs in `modlist.data` stehen).
+## Configuration
+Edit `config.json`:
 
-Hinweis: `modlist.data` darf entweder direkt IDs enthalten (z. B. `2827931647`) oder Mod-Namen. Für Namen werden zuerst `mod_id_overrides` geprüft und optional die Steam Web API (falls `steam_web_api_key` gesetzt ist).
+- `mods_dir`: Path to Necesse `mods` folder (where `modlist.data` lives).
+- `steamcmd_path`: Path to `steamcmd.exe`.
+- `steam_app_id`: App ID (Necesse = `1169040`).
+- `server_install_dir`: Install location of your Necesse server (e.g., `C:\Necesse`).
+- `server_app_id`: App ID for the dedicated server (Necesse Dedicated = `1169370`).
+- `download_dir`: Temporary download directory for SteamCMD.
+- `temp_ids_file`: File where resolved IDs are written.
+- `workshop_content_dir`: Optional; default is `<SteamCMD>\steamapps\workshop\content\1169040`.
+- `steam_web_api_key`: Optional; for name search via Steam.
+- `mod_id_overrides`: Map of mod name → Workshop ID (fallback if `modlist.data` doesn’t contain IDs).
 
-## Nutzung (Python)
+Note: `modlist.data` may contain numeric IDs (e.g., `2827931647`) or human‑readable names. For names, the tool uses overrides first, then the Steam Web API (if a key is set), and finally a best‑effort workshop HTML search.
 
-PowerShell (setzt PYTHONPATH automatisch und installiert Requirements):
+## Using the EXE
+- Recommended: Use the prebuilt `NecesseSMU.exe` from Releases and place `config.json` next to it (see above). Start by double‑clicking.
 
-```
-./run.ps1 -ConfigPath config.json
-```
-
-Oder manuell:
-
-```
-py -m pip install -r requirements.txt
-$env:PYTHONPATH = "src"
-py -m necesse_smu --config config.json
-```
-
-- `--dry-run` zeigt nur an, was passieren würde (kein Download/Kopieren).
-
-## Nutzung (EXE)
-- Empfohlen: Lade die fertige `NecesseSMU.exe` unter Releases und lege `config.json` daneben (siehe oben). Start per Doppelklick.
-
-## Selbst Bauen
-Falls du selbst bauen möchtest (Python + pip erforderlich):
+## Build Locally (optional)
+If you want to build yourself (requires Python + pip):
 
 ```
-build.bat   (oder)   ./build.ps1
+build.bat   (or)   ./build.ps1
 ```
 
-## Funktionsweise
-- Liest `modlist.data` im `mods_dir`.
-- Extrahiert alle numerischen Workshop-IDs; verbleibende Einträge gelten als Namen.
-- Mappt Namen via `mod_id_overrides` und optional via Steam Web API.
-- Führt einen SteamCMD-Aufruf mit mehreren `+workshop_download_item` aus.
-- Sucht `.jar` Dateien in den Workshop-Downloads und kopiert sie in den Mods-Ordner.
-- Löscht vorher alle `.jar` im Zielordner (nicht `modlist.data`).
+## How It Works
+- Reads `modlist.data` in `mods_dir`.
+- Extracts numeric Workshop IDs; remaining entries are treated as names.
+- Resolves names via `mod_id_overrides`, Steam Web API (optional), or HTML fallback.
+- Runs SteamCMD with multiple `+workshop_download_item` commands.
+- Finds `.jar` files in workshop downloads and copies them into the mods folder.
+- Removes existing `.jar` files in the target folder (not `modlist.data`).
 
-### Optional: Server-Update
-- Nach erfolgreichem Mod-Update fragt das Tool in farbiger Ausgabe: „Necesse Server jetzt updaten? [J/N]“
-- Bei Bestätigung wird folgender SteamCMD Befehl ausgeführt:
+### Optional: Server Update
+- After a successful mod update, the tool asks: “Update Necesse server now? [Y/N]”.
+- On confirmation, the following SteamCMD command runs:
 
 ```
 steamcmd.exe +force_install_dir "C:\\Necesse" +login anonymous +app_update 1169370 validate +quit
 ```
 
-- Voraussetzung: `server_install_dir` (und optional `server_app_id`) in `config.json` gesetzt.
+- Requirement: `server_install_dir` (and optionally `server_app_id`) in `config.json`.
 
-## Beispiel SteamCMD Befehl (intern generiert)
+## Example SteamCMD Command (generated internally)
 
 ```
-steamcmd.exe +force_install_dir "C:\SteamCMD\downloads" +login anonymous \
+steamcmd.exe +force_install_dir "C:\\SteamCMD\\downloads" +login anonymous \
   +workshop_download_item 1169040 2827931647 \
   +workshop_download_item 1169040 3052859125 \
   +quit
 ```
 
-## Hinweise
-- Workshop-Inhalte landen standardmäßig unter `<SteamCMD>\steamapps\workshop\content\1169040\<ModID>`. Das Tool sucht dort rekursiv nach `.jar`.
-- Wenn keine API genutzt wird, pflege `mod_id_overrides`, oder trage die IDs direkt in `modlist.data` ein.
-- Dieses Repo enthält `build.bat` und `build.ps1` für einen Ein-Klick-Build der EXE.
+## Notes
+- Workshop content defaults to `<SteamCMD>\steamapps\workshop\content\1169040\<ModID>`. The tool searches recursively for `.jar` files there.
+- If you don’t use the API, maintain `mod_id_overrides` or place numeric IDs directly in `modlist.data`.
+- This repo includes `build.bat` and `build.ps1` for a one‑click build.
+

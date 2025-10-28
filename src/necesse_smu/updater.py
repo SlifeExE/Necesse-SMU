@@ -30,14 +30,14 @@ def resolve_mod_ids(cfg: Config) -> Tuple[List[str], List[str]]:
                 found = query_workshop_ids_by_name(cfg.steam_web_api_key, cfg.steam_app_id, names)
                 ids.extend(found)
             except Exception as e:
-                print(f"Warnung: Steam API Abfrage fehlgeschlagen: {e}")
-        # Fallback ohne API-Key (oder falls API nichts liefert)
+                print(f"Warning: Steam API request failed: {e}")
+        # Fallback without API key (or if API returns nothing)
         try:
             unresolved = [n for n in names]
             found_html = query_workshop_ids_by_name_without_key(cfg.steam_app_id, unresolved)
             ids.extend(found_html)
         except Exception as e:
-            print(f"Warnung: Fallback-Suche ohne API fehlgeschlagen: {e}")
+            print(f"Warning: Fallback search without API failed: {e}")
 
     # Dedupe while keeping order
     ids = list(dict.fromkeys([str(i) for i in ids]))
@@ -53,11 +53,11 @@ def write_ids_temp(path: str, ids: Iterable[str]) -> None:
 
 def download_mods(cfg: Config, ids: List[str]) -> int:
     if not ids:
-        print("Keine Mod-IDs zum Download gefunden.")
+        print("No mod IDs to download.")
         return 0
     force_dir = cfg.resolve_download_dir()
     cmd = build_steamcmd_command(cfg.steamcmd_path, force_dir, ids, cfg.steam_app_id)
-    print("Starte SteamCMD Download...")
+    print("Starting SteamCMD download...")
     return run_steamcmd(cmd)
 
 
@@ -84,7 +84,7 @@ def clear_old_jars(mods_dir: str) -> None:
             try:
                 os.remove(p)
             except Exception as e:
-                print(f"Konnte alte Datei nicht löschen: {p} - {e}")
+                print(f"Failed to delete old file: {p} - {e}")
 
 
 def copy_jars_to_mods(mods_dir: str, jar_paths: Iterable[str]) -> List[str]:
@@ -96,48 +96,48 @@ def copy_jars_to_mods(mods_dir: str, jar_paths: Iterable[str]) -> List[str]:
             shutil.copy2(jar, dest)
             copied.append(dest)
         except Exception as e:
-            print(f"Konnte Jar nicht kopieren: {jar} - {e}")
+            print(f"Failed to copy jar: {jar} - {e}")
     return copied
 
 
 def run_update(cfg: Config) -> int:
-    print(f"Mods-Verzeichnis: {cfg.mods_dir}")
+    print(f"Mods directory: {cfg.mods_dir}")
     print(f"SteamCMD: {cfg.steamcmd_path}")
     ids, unresolved = resolve_mod_ids(cfg)
     if unresolved:
-        print("Nicht aufgelöste Namen in modlist.data:")
+        print("Unresolved names in modlist.data:")
         for n in unresolved:
             print(f"  - {n}")
-        print("Hinweis: Fügen Sie 'mod_id_overrides' in der config hinzu oder setzen Sie 'steam_web_api_key' für automatische Suche.")
+        print("Hint: Add 'mod_id_overrides' in config or set 'steam_web_api_key' for automatic lookup.")
         try:
             # Print a small JSON skeleton to help filling overrides quickly
             import json
             skeleton = {name: "<WORKSHOP_ID>" for name in unresolved}
-            print("Vorschlag für config.json -> mod_id_overrides:")
+            print("Suggestion for config.json -> mod_id_overrides:")
             print(json.dumps(skeleton, ensure_ascii=False, indent=2))
         except Exception:
             pass
 
     if not ids:
-        print("Keine Mod-IDs ermittelt. Abbruch.")
+        print("No workshop IDs resolved. Aborting.")
         return 1
 
     write_ids_temp(cfg.resolve_temp_ids_file(), ids)
     code = download_mods(cfg, ids)
     if code != 0:
-        print(f"SteamCMD Rückgabecode: {code}")
+        print(f"SteamCMD exit code: {code}")
         # Continue to jar copy attempt; sometimes steamcmd returns nonzero even with partial success
 
     jars = find_downloaded_jar_paths(cfg, ids)
     if not jars:
-        print("Keine .jar Dateien in Downloads gefunden.")
+        print("No .jar files found in downloads.")
         return 2
 
     clear_old_jars(cfg.mods_dir)
     copied = copy_jars_to_mods(cfg.mods_dir, jars)
-    print(f"Kopiert: {len(copied)} JARs")
+    print(f"Copied: {len(copied)} jars")
 
-    # Optional: Server-Update abfragen
+    # Optional: Ask for server update
     ask_and_update_server(cfg)
     return 0
 
@@ -148,31 +148,27 @@ def ask_and_update_server(cfg: Config) -> None:
         from colorama import Fore, Style
         colorama.init(autoreset=True)
     except Exception:
-        class Dummy:
-            RESET_ALL = ""
-        class ForeDummy:
+        class Fore:  # type: ignore
             CYAN = GREEN = YELLOW = RED = ""
-        class StyleDummy:
+        class Style:  # type: ignore
             BRIGHT = NORMAL = ""
-        Fore = ForeDummy()
-        Style = StyleDummy()
 
     if not cfg.server_install_dir:
-        print("Hinweis: 'server_install_dir' ist nicht gesetzt. Server-Update wird übersprungen.")
+        print("Note: 'server_install_dir' is not set. Skipping server update.")
         return
 
     print("")
-    print(Fore.CYAN + Style.BRIGHT + "Necesse Server jetzt updaten? [J/N]")
+    print(Fore.CYAN + Style.BRIGHT + "Update Necesse server now? [Y/N]")
     ans = input(Fore.YELLOW + "> ").strip().lower()
-    if ans not in ("j", "y", "ja", "yes"):
-        print("Server-Update übersprungen.")
+    if ans not in ("y", "yes"):
+        print("Server update skipped.")
         return
 
     cmd = build_app_update_command(cfg.steamcmd_path, cfg.server_install_dir, cfg.server_app_id)
-    print(Fore.GREEN + "Starte Server-Update via SteamCMD:")
+    print(Fore.GREEN + "Starting server update via SteamCMD:")
     print(" ".join(cmd))
     code = run_steamcmd(cmd)
     if code == 0:
-        print(Fore.GREEN + "Server-Update erfolgreich abgeschlossen.")
+        print(Fore.GREEN + "Server update completed successfully.")
     else:
-        print(Fore.RED + f"Server-Update fehlgeschlagen (Exit {code}).")
+        print(Fore.RED + f"Server update failed (exit {code}).")
