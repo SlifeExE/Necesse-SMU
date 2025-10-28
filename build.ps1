@@ -7,7 +7,18 @@ py -m pip install --upgrade pip
 py -m pip install -r requirements.txt
 
 Write-Host "Building single-file executable with PyInstaller..."
-py -m PyInstaller -F -n NecesseSAMU -p src src\samu_entry.py
+
+$iconArg = ""
+if (Test-Path "icon.ico") {
+  $iconArg = "--icon icon.ico"
+} elseif (Test-Path "icon.png") {
+  Write-Host "Converting icon.png to icon.ico ..."
+  py -m pip install --quiet Pillow | Out-Null
+  py tools\png_to_ico.py icon.png icon.ico
+  if (Test-Path "icon.ico") { $iconArg = "--icon icon.ico" }
+}
+
+py -m PyInstaller -F -n NecesseSAMU -p src $iconArg src\samu_entry.py
 
 Write-Host "Copying config..."
 if (Test-Path $ConfigPath) {
@@ -18,3 +29,4 @@ if (Test-Path $ConfigPath) {
 }
 
 Write-Host "Done. Output in dist\\NecesseSAMU.exe"
+if ($iconArg) { Write-Host "Included icon from icon.ico" }
