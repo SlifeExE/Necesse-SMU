@@ -2,7 +2,7 @@
 
 Small tool to keep Necesse server mods up to date using SteamCMD.
 
-It reads `modlist.data` from your Necesse mods folder, resolves Steam Workshop IDs (directly from the file, via overrides, or optional Steam Web API), downloads mods via SteamCMD, and copies the resulting `.jar` files into the server mods folder. Existing `.jar` files in the target folder are removed first (only `modlist.data` stays). After the mods are updated, the tool prompts whether you want to update the Necesse server as well.
+It reads `modlist.data` from your Necesse mods folder, resolves Steam Workshop IDs (directly from the file, via overrides, or optional Steam Web API), downloads mods via SteamCMD, and copies the resulting `.jar` files into the server mods folder. Existing `.jar` files in the target folder are removed first (only `modlist.data` stays).
 
 ## Quick Start (Releases)
 - Download the latest `NecesseSMU.exe` from GitHub Releases.
@@ -25,7 +25,7 @@ It reads `modlist.data` from your Necesse mods folder, resolves Steam Workshop I
 }
 ```
 
-- Double‑click `NecesseSMU.exe` (or run with `--config <path>`). After mods are updated, the tool prompts whether to update the Necesse server as well.
+- Double‑click `NecesseSMU.exe` (or run with `--config <path>`).
 
 ## Requirements
 - Windows with SteamCMD installed (e.g., `C:\SteamCMD\steamcmd.exe`).
@@ -65,7 +65,6 @@ build.bat   (or)   ./build.ps1
 - Runs SteamCMD with multiple `+workshop_download_item` commands.
 - Finds `.jar` files in workshop downloads and copies them into the mods folder.
 - Removes existing `.jar` files in the target folder (not `modlist.data`).
-- Prompts whether to update the Necesse server after mods are updated (requires `server_install_dir`).
 
 ### Optional: Server Update
 - After a successful mod update, the tool asks: “Update Necesse server now? [Y/N]”.

@@ -2,11 +2,11 @@
   "mods_dir": "C:\\Users\\Administrator\\AppData\\Roaming\\Necesse\\mods",
   "steamcmd_path": "C:\\SteamCMD\\steamcmd.exe",
   "steam_app_id": "1169040",
+  "server_install_dir": "C:\\Necesse-Server",
+  "server_app_id": "1169370",
   "download_dir": "C:\\SteamCMD\\downloads",
   "temp_ids_file": "C:\\SteamCMD\\mod_ids.txt",
   "workshop_content_dir": "",
   "steam_web_api_key": "",
-  "mod_id_overrides": {
-    "BeispielModName": "1234567890"
-  }
+  "mod_id_overrides": ""
 }

@@ -52,8 +52,8 @@ def query_workshop_ids_by_name(api_key: str, appid: str, names: List[str]) -> Li
 
 def query_workshop_ids_by_name_without_key(appid: str, names: List[str]) -> List[str]:
     """
-    Best-effort Fallback ohne API-Key: durchsucht die Workshop-Webseite und
-    extrahiert die erste gefundene PublishedFileID je Name.
+    Best-effort fallback without API key: searches the workshop website and
+    extracts the first matching publishedfileid per name.
     """
     results: List[str] = []
     headers = {

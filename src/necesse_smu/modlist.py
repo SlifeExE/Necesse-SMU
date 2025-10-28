@@ -24,7 +24,7 @@ def read_modlist(mods_dir: str) -> Tuple[List[str], List[str]]:
     """
     path = os.path.join(mods_dir, "modlist.data")
     if not os.path.isfile(path):
-        raise FileNotFoundError(f"modlist.data nicht gefunden: {path}")
+        raise FileNotFoundError(f"modlist.data not found: {path}")
 
     ids: List[str] = []
     names: List[str] = []
