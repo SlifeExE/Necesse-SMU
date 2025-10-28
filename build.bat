@@ -9,7 +9,7 @@ py -m pip install --upgrade pip
 py -m pip install -r requirements.txt
 
 echo Building executable...
-py -m PyInstaller -F -n %NAME% -p src src\necesse_smu\__main__.py
+py -m PyInstaller -F -n %NAME% -p src src\smu_entry.py
 
 if exist config.json (
   copy /Y config.json dist\config.json >nul

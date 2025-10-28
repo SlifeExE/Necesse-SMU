@@ -7,7 +7,7 @@ py -m pip install --upgrade pip
 py -m pip install -r requirements.txt
 
 Write-Host "Building single-file executable with PyInstaller..."
-py -m PyInstaller -F -n NecesseSMU -p src src\necesse_smu\__main__.py
+py -m PyInstaller -F -n NecesseSMU -p src src\smu_entry.py
 
 Write-Host "Copying config..."
 if (Test-Path $ConfigPath) {
