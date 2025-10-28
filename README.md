@@ -9,6 +9,27 @@ Es liest `modlist.data` aus dem Necesse Mods-Ordner, ermittelt die Steam Worksho
 - Necesse Mods-Ordner (z. B. `C:\Users\Administrator\AppData\Roaming\Necesse\mods`).
 - Optional: Steam Web API Key, falls Mod-Namen auf Workshop-IDs aufgelöst werden sollen.
 
+## Schnellstart (Releases)
+- Lade unter GitHub Releases die aktuelle `NecesseSMU.exe` herunter.
+- Lege eine `config.json` in den gleichen Ordner wie die `NecesseSMU.exe` mit dieser Struktur an:
+
+```
+{
+  "mods_dir": "C:\\Users\\Administrator\\AppData\\Roaming\\Necesse\\mods",
+  "steamcmd_path": "C:\\SteamCMD\\steamcmd.exe",
+  "steam_app_id": "1169040",
+  "download_dir": "C:\\SteamCMD\\downloads",
+  "temp_ids_file": "C:\\SteamCMD\\mod_ids.txt",
+  "workshop_content_dir": "",
+  "steam_web_api_key": "",
+  "mod_id_overrides": {
+    "BeispielModName": "2827931647"
+  }
+}
+```
+
+- Doppelklick auf `NecesseSMU.exe` (optional mit `--config <Pfad>`).
+
 ## Konfiguration
 Passe die Datei `config.json` an:
 
@@ -42,14 +63,14 @@ py -m necesse_smu --config config.json
 - `--dry-run` zeigt nur an, was passieren würde (kein Download/Kopieren).
 
 ## Nutzung (EXE)
+- Empfohlen: Lade die fertige `NecesseSMU.exe` unter Releases und lege `config.json` daneben (siehe oben). Start per Doppelklick.
 
-1) Baue die EXE mit PyInstaller (erfordert Python + `pip install -r requirements.txt`):
+## Selbst Bauen
+Falls du selbst bauen möchtest (Python + pip erforderlich):
 
 ```
 build.bat   (oder)   ./build.ps1
 ```
-
-2) Starte die EXE per Doppelklick: `dist\NecesseSMU.exe` (legt Config neben die EXE oder nutze `--config`).
 
 ## Funktionsweise
 - Liest `modlist.data` im `mods_dir`.
@@ -72,4 +93,3 @@ steamcmd.exe +force_install_dir "C:\SteamCMD\downloads" +login anonymous \
 - Workshop-Inhalte landen standardmäßig unter `<SteamCMD>\steamapps\workshop\content\1169040\<ModID>`. Das Tool sucht dort rekursiv nach `.jar`.
 - Wenn keine API genutzt wird, pflege `mod_id_overrides`, oder trage die IDs direkt in `modlist.data` ein.
 - Dieses Repo enthält `build.bat` und `build.ps1` für einen Ein-Klick-Build der EXE.
-
