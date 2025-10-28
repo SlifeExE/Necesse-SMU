@@ -101,6 +101,14 @@ def run_update(cfg: Config) -> int:
         for n in unresolved:
             print(f"  - {n}")
         print("Hinweis: Fügen Sie 'mod_id_overrides' in der config hinzu oder setzen Sie 'steam_web_api_key' für automatische Suche.")
+        try:
+            # Print a small JSON skeleton to help filling overrides quickly
+            import json
+            skeleton = {name: "<WORKSHOP_ID>" for name in unresolved}
+            print("Vorschlag für config.json -> mod_id_overrides:")
+            print(json.dumps(skeleton, ensure_ascii=False, indent=2))
+        except Exception:
+            pass
 
     if not ids:
         print("Keine Mod-IDs ermittelt. Abbruch.")
@@ -121,4 +129,3 @@ def run_update(cfg: Config) -> int:
     copied = copy_jars_to_mods(cfg.mods_dir, jars)
     print(f"Kopiert: {len(copied)} JARs")
     return 0
-
