@@ -89,3 +89,7 @@ steamcmd.exe +force_install_dir "C:\\SteamCMD\\downloads" +login anonymous \
 - Workshop content defaults to `<SteamCMD>\\steamapps\\workshop\\content\\1169040\\<ModID>`. The tool searches recursively for `.jar` files there.
 - If you don't use the API, maintain `mod_id_overrides` or place numeric IDs directly in `modlist.data`.
 - This repo includes `build.bat` and `build.ps1` for a one-click build.
+
+### Custom EXE Icon
+- Place an `icon.ico` next to the build scripts to embed it into the EXE.
+- Alternatively, place an `icon.png` and the build will auto-convert it to `icon.ico` (uses Pillow) and embed it.
