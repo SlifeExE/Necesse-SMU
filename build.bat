@@ -2,14 +2,14 @@
 setlocal
 
 REM Builds a single-file Windows exe with PyInstaller
-set NAME=NecesseSMU
+set NAME=NecesseSAMU
 
 echo Installing requirements...
 py -m pip install --upgrade pip
 py -m pip install -r requirements.txt
 
 echo Building executable...
-py -m PyInstaller -F -n %NAME% -p src src\smu_entry.py
+py -m PyInstaller -F -n %NAME% -p src src\samu_entry.py
 
 if exist config.json (
   copy /Y config.json dist\config.json >nul

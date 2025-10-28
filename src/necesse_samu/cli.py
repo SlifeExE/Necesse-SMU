@@ -6,7 +6,7 @@ from .updater import run_update
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Necesse Server Mod Updater")
+    parser = argparse.ArgumentParser(description="Necesse Server and Mod Updater")
     parser.add_argument("--config", "-c", help="Path to config.json", default=None)
     args = parser.parse_args(argv)
 

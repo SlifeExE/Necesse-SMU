@@ -15,7 +15,7 @@ def _prepare_path():
 
 def main():
     _prepare_path()
-    from necesse_smu.cli import main as cli_main  # type: ignore
+    from necesse_samu.cli import main as cli_main  # type: ignore
     return cli_main()
 
 

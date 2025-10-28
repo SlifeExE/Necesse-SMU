@@ -7,7 +7,7 @@ py -m pip install --upgrade pip
 py -m pip install -r requirements.txt
 
 Write-Host "Building single-file executable with PyInstaller..."
-py -m PyInstaller -F -n NecesseSMU -p src src\smu_entry.py
+py -m PyInstaller -F -n NecesseSAMU -p src src\samu_entry.py
 
 Write-Host "Copying config..."
 if (Test-Path $ConfigPath) {
@@ -17,4 +17,4 @@ if (Test-Path $ConfigPath) {
   Copy-Item config.sample.json dist\config.json -Force
 }
 
-Write-Host "Done. Output in dist\\NecesseSMU.exe"
+Write-Host "Done. Output in dist\\NecesseSAMU.exe"
