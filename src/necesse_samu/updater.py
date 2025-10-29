@@ -62,16 +62,29 @@ def download_mods(cfg: Config, ids: List[str]) -> int:
 
 
 def find_downloaded_jar_paths(cfg: Config, ids: Iterable[str]) -> List[str]:
-    base = cfg.resolve_workshop_content_dir()
+    # SteamCMD may place workshop downloads under either:
+    # 1) cfg.resolve_workshop_content_dir() (default under steamcmd_dir)
+    # 2) <force_install_dir>\steamapps\workshop\content\<appid>
+    bases: List[str] = []
+    bases.append(cfg.resolve_workshop_content_dir())
+    force_dir = cfg.resolve_download_dir()
+    alt_base = os.path.join(force_dir, "steamapps", "workshop", "content", cfg.steam_app_id)
+    if os.path.isdir(alt_base):
+        bases.append(alt_base)
+
     jars: List[str] = []
-    for mid in ids:
-        mod_dir = os.path.join(base, str(mid))
-        if not os.path.isdir(mod_dir):
-            continue
-        for root, _dirs, files in os.walk(mod_dir):
-            for fn in files:
-                if fn.lower().endswith('.jar'):
-                    jars.append(os.path.join(root, fn))
+    id_list = [str(x) for x in ids]
+    for base in bases:
+        for mid in id_list:
+            mod_dir = os.path.join(base, mid)
+            if not os.path.isdir(mod_dir):
+                continue
+            for root, _dirs, files in os.walk(mod_dir):
+                for fn in files:
+                    if fn.lower().endswith('.jar'):
+                        path = os.path.join(root, fn)
+                        if path not in jars:
+                            jars.append(path)
     return jars
 
 
@@ -98,6 +111,48 @@ def copy_jars_to_mods(mods_dir: str, jar_paths: Iterable[str]) -> List[str]:
         except Exception as e:
             print(f"Failed to copy jar: {jar} - {e}")
     return copied
+
+
+def _extract_prefix(filename: str) -> str:
+    name = os.path.basename(filename)
+    if name.lower().endswith('.jar'):
+        name = name[:-4]
+    # Use part before first dash as mod prefix (e.g., "RPGMod" from "RPGMod-1.0.2-0.7.17")
+    if '-' in name:
+        return name.split('-', 1)[0]
+    return name
+
+
+def cleanup_duplicate_versions(mods_dir: str) -> List[str]:
+    """
+    Keeps only the latest file per mod prefix; removes older versions like
+    "RPGMod-1.0.2-0.7.15.jar" when "RPGMod-1.0.2-0.7.17.jar" also exists.
+
+    Latest is determined by file modification time (mtime).
+    Returns list of removed file paths.
+    """
+    removed: List[str] = []
+    if not os.path.isdir(mods_dir):
+        return removed
+    # Collect all jars
+    jars = [os.path.join(mods_dir, f) for f in os.listdir(mods_dir) if f.lower().endswith('.jar')]
+    groups: dict[str, List[str]] = {}
+    for p in jars:
+        prefix = _extract_prefix(os.path.basename(p))
+        groups.setdefault(prefix, []).append(p)
+    # For each group, keep the most recently modified
+    for prefix, files in groups.items():
+        if len(files) <= 1:
+            continue
+        files_sorted = sorted(files, key=lambda p: os.path.getmtime(p), reverse=True)
+        keep = files_sorted[0]
+        for old in files_sorted[1:]:
+            try:
+                os.remove(old)
+                removed.append(old)
+            except Exception as e:
+                print(f"Failed to remove older version: {old} - {e}")
+    return removed
 
 
 def run_update(cfg: Config) -> int:
@@ -131,11 +186,22 @@ def run_update(cfg: Config) -> int:
     jars = find_downloaded_jar_paths(cfg, ids)
     if not jars:
         print("No .jar files found in downloads.")
+        # Help the user by showing likely paths being searched
+        default_base = cfg.resolve_workshop_content_dir()
+        alt_base = os.path.join(cfg.resolve_download_dir(), "steamapps", "workshop", "content", cfg.steam_app_id)
+        print(f"Checked: {default_base}")
+        print(f"Checked: {alt_base}")
         return 2
 
     clear_old_jars(cfg.mods_dir)
     copied = copy_jars_to_mods(cfg.mods_dir, jars)
+    # Secondary cleanup to prevent duplicates of same mod with versioned filenames
+    removed = cleanup_duplicate_versions(cfg.mods_dir)
     print(f"Copied: {len(copied)} jars")
+    if removed:
+        print("Removed older versions:")
+        for p in removed:
+            print(f"  - {p}")
 
     # Optional: Ask for server update
     ask_and_update_server(cfg)
