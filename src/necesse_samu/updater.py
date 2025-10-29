@@ -113,6 +113,48 @@ def copy_jars_to_mods(mods_dir: str, jar_paths: Iterable[str]) -> List[str]:
     return copied
 
 
+def _extract_prefix(filename: str) -> str:
+    name = os.path.basename(filename)
+    if name.lower().endswith('.jar'):
+        name = name[:-4]
+    # Use part before first dash as mod prefix (e.g., "RPGMod" from "RPGMod-1.0.2-0.7.17")
+    if '-' in name:
+        return name.split('-', 1)[0]
+    return name
+
+
+def cleanup_duplicate_versions(mods_dir: str) -> List[str]:
+    """
+    Keeps only the latest file per mod prefix; removes older versions like
+    "RPGMod-1.0.2-0.7.15.jar" when "RPGMod-1.0.2-0.7.17.jar" also exists.
+
+    Latest is determined by file modification time (mtime).
+    Returns list of removed file paths.
+    """
+    removed: List[str] = []
+    if not os.path.isdir(mods_dir):
+        return removed
+    # Collect all jars
+    jars = [os.path.join(mods_dir, f) for f in os.listdir(mods_dir) if f.lower().endswith('.jar')]
+    groups: dict[str, List[str]] = {}
+    for p in jars:
+        prefix = _extract_prefix(os.path.basename(p))
+        groups.setdefault(prefix, []).append(p)
+    # For each group, keep the most recently modified
+    for prefix, files in groups.items():
+        if len(files) <= 1:
+            continue
+        files_sorted = sorted(files, key=lambda p: os.path.getmtime(p), reverse=True)
+        keep = files_sorted[0]
+        for old in files_sorted[1:]:
+            try:
+                os.remove(old)
+                removed.append(old)
+            except Exception as e:
+                print(f"Failed to remove older version: {old} - {e}")
+    return removed
+
+
 def run_update(cfg: Config) -> int:
     print(f"Mods directory: {cfg.mods_dir}")
     print(f"SteamCMD: {cfg.steamcmd_path}")
@@ -153,7 +195,13 @@ def run_update(cfg: Config) -> int:
 
     clear_old_jars(cfg.mods_dir)
     copied = copy_jars_to_mods(cfg.mods_dir, jars)
+    # Secondary cleanup to prevent duplicates of same mod with versioned filenames
+    removed = cleanup_duplicate_versions(cfg.mods_dir)
     print(f"Copied: {len(copied)} jars")
+    if removed:
+        print("Removed older versions:")
+        for p in removed:
+            print(f"  - {p}")
 
     # Optional: Ask for server update
     ask_and_update_server(cfg)
