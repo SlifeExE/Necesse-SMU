@@ -62,16 +62,29 @@ def download_mods(cfg: Config, ids: List[str]) -> int:
 
 
 def find_downloaded_jar_paths(cfg: Config, ids: Iterable[str]) -> List[str]:
-    base = cfg.resolve_workshop_content_dir()
+    # SteamCMD may place workshop downloads under either:
+    # 1) cfg.resolve_workshop_content_dir() (default under steamcmd_dir)
+    # 2) <force_install_dir>\steamapps\workshop\content\<appid>
+    bases: List[str] = []
+    bases.append(cfg.resolve_workshop_content_dir())
+    force_dir = cfg.resolve_download_dir()
+    alt_base = os.path.join(force_dir, "steamapps", "workshop", "content", cfg.steam_app_id)
+    if os.path.isdir(alt_base):
+        bases.append(alt_base)
+
     jars: List[str] = []
-    for mid in ids:
-        mod_dir = os.path.join(base, str(mid))
-        if not os.path.isdir(mod_dir):
-            continue
-        for root, _dirs, files in os.walk(mod_dir):
-            for fn in files:
-                if fn.lower().endswith('.jar'):
-                    jars.append(os.path.join(root, fn))
+    id_list = [str(x) for x in ids]
+    for base in bases:
+        for mid in id_list:
+            mod_dir = os.path.join(base, mid)
+            if not os.path.isdir(mod_dir):
+                continue
+            for root, _dirs, files in os.walk(mod_dir):
+                for fn in files:
+                    if fn.lower().endswith('.jar'):
+                        path = os.path.join(root, fn)
+                        if path not in jars:
+                            jars.append(path)
     return jars
 
 
@@ -131,6 +144,11 @@ def run_update(cfg: Config) -> int:
     jars = find_downloaded_jar_paths(cfg, ids)
     if not jars:
         print("No .jar files found in downloads.")
+        # Help the user by showing likely paths being searched
+        default_base = cfg.resolve_workshop_content_dir()
+        alt_base = os.path.join(cfg.resolve_download_dir(), "steamapps", "workshop", "content", cfg.steam_app_id)
+        print(f"Checked: {default_base}")
+        print(f"Checked: {alt_base}")
         return 2
 
     clear_old_jars(cfg.mods_dir)
